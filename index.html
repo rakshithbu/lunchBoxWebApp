@@ -26,18 +26,24 @@
           background-color: #dddddd;
       }
   </style>
-  <body>
+  <body onload="">
 		
 		<div class="wrapper d-flex align-items-stretch">
 			<nav id="sidebar">
 				<div class="p-4 pt-5">
 	        <ul class="list-unstyled components mb-5">
 	          <li class="active">
-	            <a href="#homeSubmenu" data-toggle="collapse">Menu List</a>
+	            <a href="#" data-toggle="collapse">Categories List</a>
 	          </li>
-	          <li>
-	              <a href="#">Add new Item</a>
-	          </li>
+				<li>
+					<a href="#" data-toggle="collapse" onclick="addCategories(this)">Add new Category</a>
+				</li>
+				<li>
+					<a href="#" data-toggle="collapse" onclick="sendGetAllMenuItem()">Menu Items</a>
+				</li>
+				<li>
+					<a href="#" data-toggle="collapse" onclick="additems(this)">Add Items</a>
+				</li>
 	          <li>
               <a href="#">Active orders</a>
 	          </li>
@@ -49,91 +55,224 @@
     	</nav>
 
         <!-- Page Content  -->
-      <div id="content" class="p-4 p-md-5">
+      <div id="content" class="p-4 p-md-5" >
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-          <div class="container-fluid">
-
-            <button type="button" id="sidebarCollapse" class="btn btn-primary">
-              <i class="fa fa-bars"></i>
-              <span class="sr-only">Toggle Menu</span>
-            </button>
-            <button class="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <i class="fa fa-bars"></i>
-            </button>
-          </div>
-        </nav>
-
-        <h2 class="mb-4">Menu List</h2>
-          <form>
-              <div class="form-group">
-                  <label>Product Name</label>
-                  <input type="email" class="form-control" >
-              </div>
-                  <div class="form-group">
-                      <label>Select image</label>
-                      <input type="file" class="form-control-file" id="fileUpload"  accept="image/x-png,image/gif,image/jpeg" onchange="readFile(this)">
-                      <p id="b64" style="display:none;"></p>
-                  </div>
-
-              <div class="form-group">
-                  <button class="btn btn-primary" type="button" onclick="uploadFile()">Button</button>
-              </div>
-
-          </form>
-      </div>
+			<table id="categoryTable">
+				<tr>
+					<th>Category Name</th>
+					<th>Category Image</th>
+					<th>Edit</th>
+					<th>Delete</th>
+				</tr>
+			</table>
 		</div>
 
     <script src="js/jquery.min.js"></script>
     <script src="js/popper.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/main.js"></script>
-  <script>
+			<script>
 
-      var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
+	  var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
+      //var ws = new WebSocket("ws://ec2-54-144-155-131.compute-1.amazonaws.com:8080/ws/LunchBox");
 
       ws.onopen = function() {
-          // Web Socket is connected, send data using send()
-          ws.send("Message to send");
-          alert("Message is sent...");
+      	console.log("connection opened")
+          var obj ={};
+          obj.action ="getAllCategories";
+          $("#content").empty();
+		  $("#content").append(`<table id="categoryTable"><tr><th>Category Name</th><th>Category Image</th><th>Edit</th><th>Delete</th></tr></table>`)
+
+          ws.send(JSON.stringify(obj));
+
       };
 
       ws.onmessage = function (evt) {
-          var received_msg = evt.data;
-          alert("Message is received...");
+		var obj=   JSON.parse(evt.data)
+		  if(obj.action === "getAllCategories"){
+		  	loadCategories(JSON.parse(obj.data))
+		  }else if(obj.action === "getAllMenuItems"){
+		  	loadMenuItems(JSON.parse(obj.data));
+		  }else if(obj.action === "getAllCategoriesMenuList"){
+		  	loadCategoryMenuList(JSON.parse(obj.data));
+		  }
+
+		  else{
+			  var received_msg = evt.data;
+			  console.log(received_msg)
+			  var obj = JSON.parse(received_msg)
+			  $("#image").attr("src", obj[0].productImage);
+		  }
+
       };
 
       ws.onclose = function() {
           // websocket is closed.
-          alert("Connection is closed...");
+
       };
 
-      function readFile(that) {
-          console.log("here")
-          if (that.files && that.files[0]) {
 
-              var FR= new FileReader();
 
-              FR.addEventListener("load", function(e) {
-                 $("#b64").val(e.target.result)
-                  console.log( $("#b64").val())
-              });
 
-              FR.readAsDataURL( that.files[0] );
-          }
-      }
+      function loadCategories(data){
+       var html =`<tr><td>${data.catName}</td><td><img src="${data.catImage}" width="50" height="50"></td><td>Edit</td><td>Delete</td></tr>`
+      	console.log(data);
+       $("#categoryTable").append(html);
+	  }
 
-      function uploadFile(){
+	  function addCategories( that ){
+      	$("#content").empty();
+      	$("#content").append(`<form>
+  <div class="form-group">
+    <label>CategoryName</label>
+    <input type="text" class="form-control" id="categoryName">
+  </div>
 
-          let file = $("#fileUpload")[0].files[0];
-          var obj ={};
-          obj.action="fileUpload"
-          obj.fileName = file.name;
-          obj.fileString = $("#b64").val();
+  <div class="form-group">
+    <label>Select Image</label>
+    <input type="file" class="form-control-file" onchange="readFileCategory(this)">
+    <input type="text" style="display: none" id="image64">
+  </div>
+  <button type="button" class="btn btn-primary" onclick="submitCategories()" >Submit</button>
 
-          ws.send(JSON.stringify(obj));
-      }
+</form>`)
+	  }
 
+
+	  function additems( that ){
+		  $("#content").empty();
+		  $("#content").append(`<form>
+
+  <div class="form-group">
+    <label>Item Name</label>
+    <input type="text" class="form-control" id="itemName">
+  </div>
+
+  <div class="form-group">
+    <label>Item Description</label>
+    <input type="text" class="form-control" id="itemDesc">
+  </div>
+
+  <div class="form-group">
+    <label>Item price</label>
+    <input type="text" class="form-control" id="itemPrice">
+  </div>
+
+ <div class="form-group">
+    <label>Select Image</label>
+    <input type="file" class="form-control-file" onchange="readFile(this)">
+    <input type="text" style="display: none" id="b64">
+  </div>
+
+ <div class="form-group">
+    <label>Select Category</label>
+    <select  id="categoryMenuList">
+
+  </div>
+
+  <div class="form-group">
+    <label>Select Deal of the Day</label>
+    <input type="radio" id="deal" name="deals" value="deal">
+    <label for="male">Deal of the day</label><br>
+    <input type="radio" id="noDeal" name="deals" value="noDeal">
+     <label for="female">Not the Deal of the day</label><br>
+  </div>
+
+</select>
+  <button type="button" class="btn btn-primary" onclick="submitItems()" >Submit</button>
+</form>`
+		  )
+		  var obj = {};
+		  obj.action = "getAllCategoriesMenuList";
+		  ws.send(JSON.stringify(obj))
+	  }
+
+	  function loadCategoryMenuList(data){
+		  $("#categoryMenuList").append(`<option value="${data.catId}">${data.catName}</option>`)
+	  }
+
+
+	  function readFile(that) {
+		  console.log("here")
+		  if (that.files && that.files[0]) {
+
+			  var FR= new FileReader();
+
+			  FR.addEventListener("load", function(e) {
+				  $("#b64").val(e.target.result)
+				  console.log( $("#b64").val())
+			  });
+
+			  FR.readAsDataURL( that.files[0] );
+		  }
+	  }
+
+
+
+	  function submitItems(){
+
+		  var obj ={};
+		  obj.action="saveItems"
+
+		  var data = {}
+		  $('#categoryMenuList').val();
+		  data.itemName = $("#itemName").val();
+		  data.itemImage = $("#b64").val();
+		  data.price= $("#itemPrice").val();
+		  data.catId = $('#categoryMenuList').val();
+
+		  obj.data = JSON.stringify(data)
+		  ws.send(JSON.stringify(obj));
+
+	  }
+
+
+
+	  function readFileCategory(that) {
+		  if (that.files && that.files[0]) {
+			  var FR= new FileReader();
+			  FR.addEventListener("load", function(e) {
+				  $("#image64").val(e.target.result)
+				  console.log()
+			  });
+			  FR.readAsDataURL( that.files[0] );
+		  }
+	  }
+
+	  function submitCategories(){
+      	var obj = {};
+      	obj.action = "saveCategories";
+
+      	var data ={};
+      	data.catName = $("#categoryName").val();
+      	data.catImage = $("#image64").val();
+      	obj.data = JSON.stringify(data);
+      	ws.send(JSON.stringify(obj));
+	  }
+
+	  function sendGetAllMenuItem(){
+      	  var obj ={};
+		  obj.action ="getAllMenuItems";
+		  ws.send(JSON.stringify(obj))
+		  preLoadMenuItems();
+	  }
+
+	  function preLoadMenuItems(){
+		  $("#content").empty();
+		  $("#content").append(`<table id="categoryTable"><tr><th>Item Name</th><th>Item Description</th>><th>Item Price</th><th>Item Image</th><th>Edit</th><th>Delete</th></tr></table>`)
+	  }
+
+	  function loadMenuItems(data){
+		  // private String itemId;
+		  // private String catId;
+		  // private String itemName;
+		  // private String itemDesc;
+		  // private double price;
+		  // private String itemImage;
+		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.price}</td> <td><img src="${data.itemImage}" width="50" height="50"></td><td>Edit</td><td>Delete</td></tr>`
+		  console.log(data);
+		  $("#categoryTable").append(html);
+	  }
   </script>
   </body>
 </html>
