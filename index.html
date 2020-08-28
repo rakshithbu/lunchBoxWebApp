@@ -373,6 +373,7 @@ function saveEditCategory(categoryId){
       obj.action = "completedOrder";
       obj.orderId = orderId;
       ws.send(JSON.stringify(obj));
+		  preLoadActiveOrders();
 	  }
 
 	  function cancelOrder(that){
@@ -381,6 +382,7 @@ function saveEditCategory(categoryId){
 		  obj.action = "cancelledOrder";
 		  obj.orderId = orderId;
 		  ws.send(JSON.stringify(obj));
+		  preLoadActiveOrders()
 	  }
 
 	  function preLoadAllOrders(that){
