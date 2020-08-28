@@ -45,7 +45,7 @@
 					<a href="#" data-toggle="collapse" onclick="additems(this)">Add Items</a>
 				</li>
 	          <li>
-              <a href="#">Active orders</a>
+              <a href="#" onclick="preLoadActiveOrders(this)">Active orders</a>
 	          </li>
 	          <li>
               <a href="#">All Orders</a>
@@ -94,6 +94,8 @@
 		  	loadMenuItems(JSON.parse(obj.data));
 		  }else if(obj.action === "getAllCategoriesMenuList"){
 		  	loadCategoryMenuList(JSON.parse(obj.data));
+		  }else if(obj.action === "getActiveOrders"){
+			  LoadActiveOrders(JSON.parse(obj.data))
 		  }
 
 		  else{
@@ -349,6 +351,28 @@ function saveEditCategory(categoryId){
 		  obj.isInStock = flag;
 		  	ws.send(JSON.stringify(obj))
 	  }
+
+	  function preLoadActiveOrders(that){
+		  $("#content").empty();
+		  $("#content").append(`<table id="categoryTable"><tr><th>UserName</th><th>Product Details</th><th>Order Status</th><th>Order Date</th><th>Oder Finished</th><th>Cancel Order</th></tr></table>`)
+		  var obj ={};
+		  obj.action = "getActiveOrders";
+		  ws.send(JSON.stringify(obj))
+	  }
+
+	  function LoadActiveOrders(data){
+		  var html =`<tr><td>${data.userId}</td><td>${data.productIds}</td><td>${data.status}</td><td>${data.dateTime}</td><td><input type="button" value="Order Finished" name="${data.orderId}" onclick="finishOrder(this)"></td><td><input type="button" value="Cancel Order" name="${data.orderId}" onclick="cancelOder(this)"></td></tr>`;
+		  $("#content").append(html);
+	  }
+
+	  function finishOrder(){
+
+	  }
+
+	  function cancelOrder(){
+
+	  }
+
   </script>
   </body>
 </html>
