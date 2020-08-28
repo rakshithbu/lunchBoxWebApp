@@ -72,8 +72,8 @@
     <script src="js/main.js"></script>
 			<script>
 
-	  var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
-      //var ws = new WebSocket("ws://ec2-54-144-155-131.compute-1.amazonaws.com:8080/ws/LunchBox");
+	  var ws = new WebSocket("ws://ec2-54-144-155-131.compute-1.amazonaws.com:8080/ws/LunchBox");
+      //var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
 
       ws.onopen = function() {
       	console.log("connection opened")
@@ -182,7 +182,6 @@ function editCategory(that){
 	$('#categoryModal').modal('toggle');
 }
 
-
 function saveEditCategory(categoryId){
 
 	var obj = {};
@@ -241,7 +240,10 @@ function saveEditCategory(categoryId){
 		  var obj = {};
 		  obj.action = "getAllCategoriesMenuList";
 		  ws.send(JSON.stringify(obj))
-	  }
+      }
+
+
+
 
 	  function loadCategoryMenuList(data){
 		  $("#categoryMenuList").append(`<option value="${data.catId}">${data.catName}</option>`)
@@ -322,7 +324,7 @@ function saveEditCategory(categoryId){
 
 	  function preLoadMenuItems(){
 		  $("#content").empty();
-		  $("#content").append(`<table id="categoryTable"><tr><th>Item Name</th><th>Item Description</th><th>Category Name</th><th>Item Price</th><th>Item Image</th><th>Edit</th><th>Delete</th><th>Is in Stock</th></tr></table>`)
+		  $("#content").append(`<table id="categoryTable"><tr><th>Item Name</th><th>Item Description</th><th>Item Price</th><th>Item Image</th><th>Delete</th><th>Is in Stock</th></tr></table>`)
 	  }
 
 	  function loadMenuItems(data){
@@ -332,9 +334,71 @@ function saveEditCategory(categoryId){
 		  }else{
 			  isInStockHTML = `<td><input type="button" value="In Stock"  onclick="makeInStock(this,true)" name="${data.itemId}" style="color: red"></td>`;
 		  }
-		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.categoryName}</td><td>${data.price}</td><td><img src="${data.itemImage}" width="50" height="50"></td><td><input type="button" value="Edit" name="${data}" onclick="editMenuItem(this)"></td><td><input type="button" value="Delete" name="${data.itemId}" onclick="deleteMenuItem(this)"></td>${isInStockHTML}</tr>`
+		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.price}</td><td><img src="${data.itemImage}" width="50" height="50"></td><td><input type="button" value="Delete" name="${data.itemId}" onclick="deleteMenuItem(this)"></td>${isInStockHTML}</tr>`
 		  $("#categoryTable").append(html);
 	  }
+
+
+	  function editMenuItem(that){
+		  $("#itemModal").remove();
+		  var itemName = $(that).parent().siblings(":first").text();
+		  var itemDesc =  $(that).parent().find("td:eq(2)").text();
+		  var itemPrice =  $(that).parent().find("td:eq(3)").text();
+		  var categoryId = $(that).attr("name");
+		  $("#content").append(`<div class="modal" tabindex="-1" role="dialog" id="itemModal">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Edit ${categoryName}</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+    <label>Item Name</label>
+    <input type="text" class="form-control" id="editItemName">
+  </div>
+
+  <div class="form-group">
+    <label>Item Description</label>
+    <input type="text" class="form-control" id="editItemDesc">
+  </div>
+
+  <div class="form-group">
+    <label>Item price</label>
+    <input type="text" class="form-control" id="editItemPrice">
+  </div>
+
+ <div class="form-group">
+    <label>Select Image</label>
+    <input type="file" class="form-control-file" onchange="readFile(this)">
+    <input type="text" style="display: none" id="b64">
+  </div>
+
+ <div class="form-group">
+    <label>Select Category</label>
+    <select  id="categoryMenuList">
+  </div>
+</select>
+
+<div class="form-group">
+    <input type="radio" id="deal" name="deals" value="deal">
+    <label for="male">Deal of the day</label><br>
+    <input type="radio" id="noDeal" name="deals" value="noDeal">
+     <label for="female">Not the Deal of the day</label><br>
+  </div>
+
+  <button type="button" class="btn btn-primary" onclick="submitItems()" >Submit</button>
+<div class="modal-footer">
+<button type="button" class="btn btn-primary" onclick="saveEditCategory('${categoryId}')">Save changes</button>
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>`)
+		  $('#itemModal').modal('toggle');
+      }
 
 
 	  function deleteMenuItem(that){
@@ -346,8 +410,8 @@ function saveEditCategory(categoryId){
 		  sendGetAllMenuItem();
       //	sendGetAllMenuItem()
 	  }
-	  function makeInStock(that,flag){
 
+	  function makeInStock(that,flag){
       	var obj= {};
       	obj.action = "isInStock";
       	obj.itemId = $(that).attr("name");
