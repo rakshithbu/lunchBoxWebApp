@@ -32,7 +32,7 @@
 			<nav id="sidebar">
 				<div class="p-4 pt-5">
 	        <ul class="list-unstyled components mb-5">
-	          <li class="active">
+	          <li>
 	            <a href="#" data-toggle="collapse" onclick="openCategories(this)">Categories List</a>
 	          </li>
 				<li>
@@ -316,7 +316,7 @@ function saveEditCategory(categoryId){
 	  function sendGetAllMenuItem(){
       	  var obj ={};
 		  obj.action ="getAllMenuItems";
-		  ws.send(JSON.stringify(obj))
+		  ws.send(JSON.stringify(obj));
 		  preLoadMenuItems();
 	  }
 
@@ -333,10 +333,19 @@ function saveEditCategory(categoryId){
 			  isInStockHTML = `<td><input type="button" value="In Stock"  onclick="makeInStock(this,true)" name="${data.itemId}" style="color: red"></td>`;
 		  }
 		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.categoryName}</td><td>${data.price}</td><td><img src="${data.itemImage}" width="50" height="50"></td><td><input type="button" value="Edit" name="${data}" onclick="editMenuItem(this)"></td><td><input type="button" value="Delete" name="${data.itemId}" onclick="deleteMenuItem(this)"></td>${isInStockHTML}</tr>`
-		  console.log(data);
 		  $("#categoryTable").append(html);
 	  }
 
+
+	  function deleteMenuItem(that){
+      	var menuId = $(that).attr("name");
+      	var obj ={};
+      	obj.action = "deleteMenuItem";
+      	obj.itemId = menuId;
+      	ws.send(JSON.stringify(obj));
+		  sendGetAllMenuItem();
+      //	sendGetAllMenuItem()
+	  }
 	  function makeInStock(that,flag){
 
       	var obj= {};
