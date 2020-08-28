@@ -33,7 +33,7 @@
 				<div class="p-4 pt-5">
 	        <ul class="list-unstyled components mb-5">
 	          <li class="active">
-	            <a href="#" data-toggle="collapse">Categories List</a>
+	            <a href="#" data-toggle="collapse" onclick="openCategories(this)">Categories List</a>
 	          </li>
 				<li>
 					<a href="#" data-toggle="collapse" onclick="addCategories(this)">Add new Category</a>
@@ -56,7 +56,6 @@
 
         <!-- Page Content  -->
       <div id="content" class="p-4 p-md-5" >
-
 			<table id="categoryTable">
 				<tr>
 					<th>Category Name</th>
@@ -81,7 +80,7 @@
           var obj ={};
           obj.action ="getAllCategories";
           $("#content").empty();
-		  $("#content").append(`<table id="categoryTable"><tr><th>Category Name</th><th>Category Image</th><th>Edit</th><th>Delete</th></tr></table>`)
+		  $("#content").append(`<table id="categoryTable"><tr><th>Category Name</th><th>Category Image</th><th>Edit</th></tr></table>`)
 
           ws.send(JSON.stringify(obj));
 
@@ -112,10 +111,18 @@
       };
 
 
+      function openCategories(that){
+		  var obj ={};
+		  obj.action ="getAllCategories";
+		  $("#content").empty();
+		  $("#content").append(`<table id="categoryTable"><tr><th>Category Name</th><th>Category Image</th><th>Edit</th></tr></table>`)
+
+		  ws.send(JSON.stringify(obj));
+	  }
 
 
       function loadCategories(data){
-       var html =`<tr><td>${data.catName}</td><td><img src="${data.catImage}" width="50" height="50"></td><td>Edit</td><td>Delete</td></tr>`
+       var html =`<tr><td>${data.catName}</td><td><img src="${data.catImage}" width="50" height="50"></td><td><input type="button" value="Edit" name="${data.catId}" onclick="editCategory(this)"></td></tr>`
       	console.log(data);
        $("#categoryTable").append(html);
 	  }
@@ -135,14 +142,61 @@
   </div>
   <button type="button" class="btn btn-primary" onclick="submitCategories()" >Submit</button>
 
-</form>`)
-	  }
+</form>`)}
+
+function editCategory(that){
+      	$("#categoryModal").remove();
+       var categoryName = $(that).parent().siblings(":first").text();
+       var categoryId = $(that).attr("name");
+	  $("#content").append(`<div class="modal" tabindex="-1" role="dialog" id="categoryModal">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Edit ${categoryName}</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+    <label>CategoryName</label>
+    <input type="text" class="form-control" id="editCategoryName" value="${categoryName}">
+  </div>
+  <div class="form-group">
+    <label>Select Image</label>
+    <input type="file" class="form-control-file" onchange="readFileCategory(this)">
+    <input type="text" style="display: none" id="image64">
+  </div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-primary" onclick="saveEditCategory('${categoryId}')">Save changes</button>
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>`)
+	$('#categoryModal').modal('toggle');
+}
+
+
+function saveEditCategory(categoryId){
+
+	var obj = {};
+	obj.action = "updateCategory";
+	var data ={};
+	data.catName = $("#editCategoryName").val();
+	data.catImage = $("#image64").val();
+	data.catId = categoryId;
+	obj.data = JSON.stringify(data);
+	ws.send(JSON.stringify(obj));
+
+}
+
 
 
 	  function additems( that ){
 		  $("#content").empty();
 		  $("#content").append(`<form>
-
   <div class="form-group">
     <label>Item Name</label>
     <input type="text" class="form-control" id="itemName">
@@ -167,18 +221,16 @@
  <div class="form-group">
     <label>Select Category</label>
     <select  id="categoryMenuList">
-
   </div>
+</select>
 
-  <div class="form-group">
-    <label>Select Deal of the Day</label>
+<div class="form-group">
     <input type="radio" id="deal" name="deals" value="deal">
     <label for="male">Deal of the day</label><br>
     <input type="radio" id="noDeal" name="deals" value="noDeal">
      <label for="female">Not the Deal of the day</label><br>
   </div>
 
-</select>
   <button type="button" class="btn btn-primary" onclick="submitItems()" >Submit</button>
 </form>`
 		  )
@@ -220,6 +272,13 @@
 		  data.itemImage = $("#b64").val();
 		  data.price= $("#itemPrice").val();
 		  data.catId = $('#categoryMenuList').val();
+		  data.itemDesc = $('#itemDesc').val();
+		  if($('input[name="deals"]:checked').val()==="deal"){
+		  	data.deal = true;
+		  }else{
+		  	data.deal = false;
+		  }
+
 
 		  obj.data = JSON.stringify(data)
 		  ws.send(JSON.stringify(obj));
@@ -259,19 +318,36 @@
 
 	  function preLoadMenuItems(){
 		  $("#content").empty();
-		  $("#content").append(`<table id="categoryTable"><tr><th>Item Name</th><th>Item Description</th>><th>Item Price</th><th>Item Image</th><th>Edit</th><th>Delete</th></tr></table>`)
+		  $("#content").append(`<table id="categoryTable"><tr><th>Item Name</th><th>Item Description</th><th>Category Name</th><th>Item Price</th><th>Item Image</th><th>Edit</th><th>Delete</th><th>Is in Stock</th></tr></table>`)
 	  }
 
 	  function loadMenuItems(data){
-		  // private String itemId;
-		  // private String catId;
-		  // private String itemName;
-		  // private String itemDesc;
-		  // private double price;
-		  // private String itemImage;
-		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.price}</td> <td><img src="${data.itemImage}" width="50" height="50"></td><td>Edit</td><td>Delete</td></tr>`
+		  var isInStockHTML = '';
+		  if(data.inStock === true){
+			   isInStockHTML = `<td><input type="button" value="Out of Stock"  onclick="makeOutOfStock(this,false)" name="${data.itemId}"></td>`;
+		  }else{
+			  isInStockHTML = `<td><input type="button" value="In Stock"  onclick="makeInStock(this,true)" name="${data.itemId}" style="color: red"></td>`;
+		  }
+		  var html =`<tr><td>${data.itemName}</td><td>${data.itemDesc}</td><td>${data.categoryName}</td><td>${data.price}</td><td><img src="${data.itemImage}" width="50" height="50"></td><td><input type="button" value="Edit" name="${data}" onclick="editMenuItem(this)"></td><td><input type="button" value="Delete" name="${data.itemId}" onclick="deleteMenuItem(this)"></td>${isInStockHTML}</tr>`
 		  console.log(data);
 		  $("#categoryTable").append(html);
+	  }
+
+	  function makeInStock(that,flag){
+
+      	var obj= {};
+      	obj.action = "isInStock";
+      	obj.itemId = $(that).attr("name");
+      	obj.isInStock = flag;
+      	ws.send(JSON.stringify(data))
+	  }
+
+	  function makeOutOfStock(that,flag){
+		  var obj= {};
+		  obj.action = "isInStock";
+		  obj.itemId = $(that).attr("name");
+		  obj.isInStock = flag;
+		  	ws.send(JSON.stringify(obj))
 	  }
   </script>
   </body>
