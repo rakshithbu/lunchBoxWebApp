@@ -72,8 +72,8 @@
     <script src="js/main.js"></script>
 			<script>
 
-	  var ws = new WebSocket("ws://ec2-54-144-155-131.compute-1.amazonaws.com:8080/ws/LunchBox");
-      //var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
+	  //var ws = new WebSocket("ws://ec2-54-144-155-131.compute-1.amazonaws.com:8080/ws/LunchBox");
+      var ws = new WebSocket("ws://localhost:8080/ws/LunchBox");
 
       ws.onopen = function() {
       	console.log("connection opened")
@@ -81,7 +81,6 @@
           obj.action ="getAllCategories";
           $("#content").empty();
 		  $("#content").append(`<table id="categoryTable"><tr><th>Category Name</th><th>Category Image</th><th>Edit</th></tr></table>`)
-
           ws.send(JSON.stringify(obj));
 
       };
@@ -408,7 +407,7 @@ function saveEditCategory(categoryId){
       	obj.itemId = menuId;
       	ws.send(JSON.stringify(obj));
 		  sendGetAllMenuItem();
-      //	sendGetAllMenuItem()
+         sendGetAllMenuItem();
 	  }
 
 	  function makeInStock(that,flag){
@@ -416,7 +415,8 @@ function saveEditCategory(categoryId){
       	obj.action = "isInStock";
       	obj.itemId = $(that).attr("name");
       	obj.isInStock = flag;
-      	ws.send(JSON.stringify(data))
+      	ws.send(JSON.stringify(obj))
+		  sendGetAllMenuItem();
 	  }
 
 	  function makeOutOfStock(that,flag){
@@ -424,7 +424,8 @@ function saveEditCategory(categoryId){
 		  obj.action = "isInStock";
 		  obj.itemId = $(that).attr("name");
 		  obj.isInStock = flag;
-		  	ws.send(JSON.stringify(obj))
+		  ws.send(JSON.stringify(obj));
+		  sendGetAllMenuItem();
 	  }
 
 	  function preLoadActiveOrders(that){
@@ -436,7 +437,7 @@ function saveEditCategory(categoryId){
 	  }
 
 	  function LoadActiveOrders(data){
-		  var html =`<tr><td>${data.userId}</td><td>${data.productIds}</td><td>${data.status}</td><td>${data.dateTime}</td><td><input type="button" value="Order Finished" name="${data.orderId}" onclick="finishOrder(this)"></td><td><input type="button" value="Cancel Order" name="${data.orderId}" onclick="cancelOder(this)"></td></tr>`;
+		  var html =`<tr><td>${data.userId}</td><td>${data.productIds}</td><td>${data.status}</td><td>${data.dummyDate}</td><td><input type="button" value="Order Finished" name="${data.orderId}" onclick="finishOrder(this)"></td><td><input type="button" value="Cancel Order" name="${data.orderId}" onclick="cancelOrder(this)"></td></tr>`;
 		  $("#content").append(html);
 	  }
 
@@ -467,8 +468,12 @@ function saveEditCategory(categoryId){
 	  }
 
 	  function LoadAllOrders(data){
-		  var html =`<tr><td>${data.userId}</td><td>${data.productIds}</td><td>${data.status}</td><td>${data.dateTime}</td></tr>`;
+		  var html =`<tr><td>${data.userId}</td><td>${data.productIds}</td><td>${data.status}</td><td>${data.dummyDate}</td></tr>`;
 		  $("#content").append(html);
+	  }
+
+	  function cancelOrder(that){
+      var orderId = $(that).attr(name);
 	  }
 
   </script>
